@@ -1,0 +1,24 @@
+# 自动编译代码
+
+name: Build Artifact
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Build Artifact
+        run: docker run --rm -v $PWD:/project -w /project espressif/idf:v5.0 bash -c "idf.py merge"
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: esp32s3.bin
+          path: ./build/esp32s3.bin
