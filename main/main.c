@@ -33,7 +33,7 @@ static camera_config_t camera_config = {
         .pin_pclk = 11,
 
         //XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
-        .xclk_freq_hz = 10000000,
+        .xclk_freq_hz = 20000000,
         .ledc_timer = LEDC_TIMER_0,
         .ledc_channel = LEDC_CHANNEL_0,
 
@@ -145,7 +145,7 @@ void app_main() {
         }
 
         ESP_LOGI(TAG, "screen: %lld", timeProbe_stop(&screen_prepare));
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+//        vTaskDelay(100 / portTICK_PERIOD_MS);
 
         //////////////////
         gpio_set_level(13, 1);
