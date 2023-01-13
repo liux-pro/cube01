@@ -33,7 +33,7 @@ static camera_config_t camera_config = {
         .pin_pclk = 11,
 
         //XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
-        .xclk_freq_hz = 20000000,
+        .xclk_freq_hz = 10000000,
         .ledc_timer = LEDC_TIMER_0,
         .ledc_channel = LEDC_CHANNEL_0,
 
@@ -58,29 +58,26 @@ static esp_err_t init_camera() {
 }
 
 
-
 TFT_t dev;
 
 uint16_t WorkFrame[240 * 240];
-
-
 
 
 spi_transaction_t p_spi_transaction_pool[30];
 
 void initSpiTransactionPool() {
     for (int i = 0; i < 30; i += 1) {
-        p_spi_transaction_pool[i].length = CONFIG_WIDTH * 2 * 8*8;
-        p_spi_transaction_pool[i].tx_buffer = &WorkFrame[i * (CONFIG_WIDTH)*8];
+        p_spi_transaction_pool[i].length = CONFIG_WIDTH * 2 * 8 * 8;
+        p_spi_transaction_pool[i].tx_buffer = &WorkFrame[i * (CONFIG_WIDTH) * 8];
     }
 }
 
 
 void app_main() {
     gpio_reset_pin(13);
-    gpio_set_direction(13,GPIO_MODE_OUTPUT);
-    gpio_set_level(13,0);
-    gpio_set_level(13,1);
+    gpio_set_direction(13, GPIO_MODE_OUTPUT);
+    gpio_set_level(13, 0);
+    gpio_set_level(13, 1);
 //    vTaskDelay(3000 / portTICK_RATE_MS);
 
     spi_master_init(&dev, CONFIG_MOSI_GPIO, CONFIG_SCLK_GPIO, CONFIG_CS_GPIO, CONFIG_DC_GPIO, CONFIG_RESET_GPIO,
@@ -113,12 +110,14 @@ void app_main() {
     timeProbe_t camera;
     timeProbe_t screen;
     timeProbe_t screen_prepare;
+    timeProbe_t fps;
     while (1) {
         timeProbe_start(&camera);
+        timeProbe_start(&fps);
         camera_fb_t *pic = esp_camera_fb_get();
         // use pic->buf to access the image
         ESP_LOGI(TAG, "Picture taken! Its size was: %zu bytes", pic->len);
-        memcpy(WorkFrame,pic->buf,240*240*2);
+        memcpy(WorkFrame, pic->buf, 240 * 240 * 2);
 
 //        for (int i = 0; i < 96; ++i) {
 //            memcpy(&WorkFrame[CONFIG_WIDTH*i],&((pic->buf)[i*96*2]),96*2);
@@ -129,7 +128,7 @@ void app_main() {
         //////////////
 
 
-        gpio_set_level(13,0);
+        gpio_set_level(13, 0);
 
         timeProbe_start(&screen_prepare);
         lcdPrepareMultiPixels(&dev);
@@ -146,9 +145,11 @@ void app_main() {
         }
 
         ESP_LOGI(TAG, "screen: %lld", timeProbe_stop(&screen_prepare));
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
 
         //////////////////
-        gpio_set_level(13,1);
+        gpio_set_level(13, 1);
+
+        ESP_LOGI(TAG, "fps: %f", 1000/(timeProbe_stop(&fps)/1000.0));
     }
 }
