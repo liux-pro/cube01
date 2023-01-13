@@ -9,7 +9,7 @@
 
 #include "esp_camera.h"
 #include "esp_heap_caps.h"
-
+#include "apriltag.h"
 
 static const char *TAG = "example:take_picture";
 
@@ -61,7 +61,22 @@ static esp_err_t init_camera() {
 TFT_t dev;
 
 uint16_t WorkFrame[240 * 240];
+uint8_t gray[240*240];
+uint16_t swap_uint16(uint16_t val) {
+    return (val << 8) | (val >> 8);
+}
 
+void convert_rgb565_to_grayscale(const unsigned short *rgb, unsigned char *gray, int width, int height) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            unsigned short pixel =swap_uint16( rgb[y * width + x]);
+            unsigned char red = (pixel >> 11) & 0x1F;
+            unsigned char green = (pixel >> 5) & 0x3F;
+            unsigned char blue = pixel & 0x1F;
+            gray[y * width + x] = (unsigned char)(0.2989 * red + 0.5870 * green + 0.1140 * blue);
+        }
+    }
+}
 
 spi_transaction_t p_spi_transaction_pool[30];
 
@@ -111,6 +126,32 @@ void app_main() {
     timeProbe_t screen;
     timeProbe_t screen_prepare;
     timeProbe_t fps;
+    apriltag_family_t *tf = NULL;
+    tf = tag16h5_create();
+    apriltag_detector_t *td = apriltag_detector_create();
+    apriltag_detector_add_family_bits(td, tf, 1);
+    // 降低分辨率，会提高速度，降低精度 eg. 2 减小两倍
+    td->quad_decimate = 2;
+    //高斯模糊 eg 0.8
+    td->quad_sigma = 0.8;
+    // 线程数
+    td->nthreads = 1;
+    //
+    td->debug = false;
+    td->refine_edges = true;
+
+
+    image_u8_t *im = NULL;
+
+    static image_u8_t tmp = {
+            .width=240,
+            .height=240,
+            .stride=240,
+    };
+    tmp.buf = gray;
+    im = &tmp;
+
+
     while (1) {
         timeProbe_start(&camera);
         timeProbe_start(&fps);
@@ -133,6 +174,21 @@ void app_main() {
         timeProbe_start(&screen_prepare);
         lcdPrepareMultiPixels(&dev);
         ESP_LOGI(TAG, "screen_prepare: %lld", timeProbe_stop(&screen_prepare));
+
+        convert_rgb565_to_grayscale(WorkFrame,gray,240,240);
+
+        zarray_t *detections = apriltag_detector_detect(td, im);
+        for (int i = 0; i < zarray_size(detections); i++) {
+            apriltag_detection_t *det;
+            zarray_get(detections, i, &det);
+            ESP_LOGE("apriltag","detection %3d: id (%2lux%2lu)-%-4d, hamming %d, margin %8.3f\n",
+                   i, det->family->nbits, det->family->h, det->id, det->hamming, det->decision_margin);
+            ESP_LOGE("apriltag","x %8.3lf   y %8.3lf\n",
+                   det->c[0], det->c[1]);
+        }
+        apriltag_detections_destroy(detections);
+
+
         timeProbe_start(&screen);
 
         for (int i = 0; i < 30; i += 1) {
@@ -152,4 +208,6 @@ void app_main() {
 
         ESP_LOGI(TAG, "fps: %f", 1000/(timeProbe_stop(&fps)/1000.0));
     }
+    apriltag_detector_destroy(td);
+    tag16h5_destroy(tf);
 }

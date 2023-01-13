@@ -10,12 +10,18 @@ dependencies:
     source:
       type: idf
     version: 5.0.0
+  liux-pro/apriltag:
+    component_hash: 3fb86010c186441d9f2eb64b39c3d2ac2b6a321de122bd4b239f069fb5e76be2
+    source:
+      service_url: https://api.components.espressif.com/
+      type: service
+    version: 0.0.3
   liux-pro/merge:
     component_hash: 157a7a1a24aa135836c6571110436622cadd11758aa76d7dac511a8719434961
     source:
       service_url: https://api.components.espressif.com/
       type: service
     version: 0.0.2
-manifest_hash: e10c24627ba764ae5ecb5f784c1e5e1789d077179bfa45336f2dc2b4dd383ed2
+manifest_hash: 18603f59dfb9000dd4199224d5fcf62d2bac090b0472aae3579d6ecc293fa87a
 target: esp32s3
 version: 1.0.0

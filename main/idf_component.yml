@@ -1,5 +1,6 @@
 ## IDF Component Manager Manifest File
 dependencies:
+  liux-pro/apriltag: "^0.0.3"
   liux-pro/merge: "^0.0.2"
   espressif/esp32-camera: "^2.0.3"
   ## Required IDF version
