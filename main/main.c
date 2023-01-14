@@ -73,10 +73,22 @@ void convert_rgb565_to_grayscale(const unsigned short *rgb, unsigned char *gray,
             unsigned char red = (pixel >> 11) & 0x1F;
             unsigned char green = (pixel >> 5) & 0x3F;
             unsigned char blue = pixel & 0x1F;
-            gray[y * width + x] = (unsigned char)(0.2989 * red + 0.5870 * green + 0.1140 * blue);
+//            gray[y * width + x] = (unsigned char)(0.2989 * red + 0.5870 * green + 0.1140 * blue);
+            gray[y * width + x] =  (red*19595 + green*38469 + blue*7472) >> 16;
         }
     }
 }
+
+void draw_rect_rgb565(unsigned short *screen, int width, int height, int x1, int y1, int x2, int y2, unsigned short color) {
+    for (int y = y1; y <= y2; y++) {
+        for (int x = x1; x <= x2; x++) {
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+                screen[y * width + x] = color;
+            }
+        }
+    }
+}
+
 
 spi_transaction_t p_spi_transaction_pool[30];
 
@@ -126,6 +138,7 @@ void app_main() {
     timeProbe_t screen;
     timeProbe_t screen_prepare;
     timeProbe_t fps;
+    timeProbe_t gray_convert;
     apriltag_family_t *tf = NULL;
     tf = tag16h5_create();
     apriltag_detector_t *td = apriltag_detector_create();
@@ -174,10 +187,12 @@ void app_main() {
         timeProbe_start(&screen_prepare);
         lcdPrepareMultiPixels(&dev);
         ESP_LOGI(TAG, "screen_prepare: %lld", timeProbe_stop(&screen_prepare));
-
+        timeProbe_start(&gray_convert);
         convert_rgb565_to_grayscale(WorkFrame,gray,240,240);
+        ESP_LOGI(TAG, "gray: %lld", timeProbe_stop(&gray_convert));
 
         zarray_t *detections = apriltag_detector_detect(td, im);
+        int x=0,y=0;
         for (int i = 0; i < zarray_size(detections); i++) {
             apriltag_detection_t *det;
             zarray_get(detections, i, &det);
@@ -185,9 +200,13 @@ void app_main() {
                    i, det->family->nbits, det->family->h, det->id, det->hamming, det->decision_margin);
             ESP_LOGE("apriltag","x %8.3lf   y %8.3lf\n",
                    det->c[0], det->c[1]);
+            x=det->c[0];
+            y=det->c[1];
         }
         apriltag_detections_destroy(detections);
-
+        if (x+y != 0){
+            draw_rect_rgb565(WorkFrame,240,240,x,y,x+10,y+10,0b0000011100000111);
+        }
 
         timeProbe_start(&screen);
 
