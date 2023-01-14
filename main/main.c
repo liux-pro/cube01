@@ -60,8 +60,8 @@ static esp_err_t init_camera() {
 
 TFT_t dev;
 
-uint16_t WorkFrame[240 * 240];
-uint8_t gray[240*240];
+uint16_t frameBuffer[240 * 240];
+EXT_RAM_BSS_ATTR uint8_t gray[240*240];
 uint16_t swap_uint16(uint16_t val) {
     return (val << 8) | (val >> 8);
 }
@@ -95,7 +95,7 @@ spi_transaction_t p_spi_transaction_pool[30];
 void initSpiTransactionPool() {
     for (int i = 0; i < 30; i += 1) {
         p_spi_transaction_pool[i].length = CONFIG_WIDTH * 2 * 8 * 8;
-        p_spi_transaction_pool[i].tx_buffer = &WorkFrame[i * (CONFIG_WIDTH) * 8];
+        p_spi_transaction_pool[i].tx_buffer = &frameBuffer[i * (CONFIG_WIDTH) * 8];
     }
 }
 
@@ -171,7 +171,7 @@ void app_main() {
         camera_fb_t *pic = esp_camera_fb_get();
         // use pic->buf to access the image
         ESP_LOGI(TAG, "Picture taken! Its size was: %zu bytes", pic->len);
-        memcpy(WorkFrame, pic->buf, 240 * 240 * 2);
+        memcpy(frameBuffer, pic->buf, 240 * 240 * 2);
 
 //        for (int i = 0; i < 96; ++i) {
 //            memcpy(&WorkFrame[CONFIG_WIDTH*i],&((pic->buf)[i*96*2]),96*2);
@@ -188,7 +188,7 @@ void app_main() {
         lcdPrepareMultiPixels(&dev);
         ESP_LOGI(TAG, "screen_prepare: %lld", timeProbe_stop(&screen_prepare));
         timeProbe_start(&gray_convert);
-        convert_rgb565_to_grayscale(WorkFrame,gray,240,240);
+        convert_rgb565_to_grayscale(frameBuffer, gray, 240, 240);
         ESP_LOGI(TAG, "gray: %lld", timeProbe_stop(&gray_convert));
 
         zarray_t *detections = apriltag_detector_detect(td, im);
@@ -205,7 +205,7 @@ void app_main() {
         }
         apriltag_detections_destroy(detections);
         if (x+y != 0){
-            draw_rect_rgb565(WorkFrame,240,240,x,y,x+10,y+10,0b0000011100000111);
+            draw_rect_rgb565(frameBuffer, 240, 240, x, y, x + 10, y + 10, 0xffff);
         }
 
         timeProbe_start(&screen);
