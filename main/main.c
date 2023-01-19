@@ -1,7 +1,6 @@
 #include <esp_log.h>
 #include <string.h>
 #include "timeProbe.h"
-#include "delay.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -111,9 +110,6 @@ draw_rect_rgb565(unsigned short *screen, int width, int height, int x1, int y1, 
         }
     }
 }
-
-
-spi_transaction_t p_spi_transaction_pool[30];
 
 
 
