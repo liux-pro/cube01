@@ -1,3 +1,4 @@
+#include <sys/cdefs.h>
 #include <esp_log.h>
 #include <string.h>
 
@@ -26,34 +27,7 @@ uint16_t frameBuffer[240 * 240];
 EXT_RAM_BSS_ATTR uint8_t gray[240 * 240];
 
 
-void convert_rgb565_to_grayscale(const unsigned short *rgb, unsigned char *gray, int width, int height) {
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            unsigned short pixel = swap_uint16(rgb[y * width + x]);
-            unsigned char red = (pixel >> 11) & 0x1F;
-            unsigned char green = (pixel >> 5) & 0x3F;
-            unsigned char blue = pixel & 0x1F;
-//            gray[y * width + x] = (unsigned char)(0.2989 * red + 0.5870 * green + 0.1140 * blue);
-//           convert to fixed point
-            gray[y * width + x] = (red * 19595 + green * 38469 + blue * 7472) >> 16;
-        }
-    }
-}
-
-
-void
-draw_rect_rgb565(unsigned short *screen, int width, int height, int x1, int y1, int x2, int y2, unsigned short color) {
-    for (int y = y1; y <= y2; y++) {
-        for (int x = x1; x <= x2; x++) {
-            if (x >= 0 && x < width && y >= 0 && y < height) {
-                screen[y * width + x] = color;
-            }
-        }
-    }
-}
-
-
-void app_main() {
+_Noreturn void app_main() {
     //初始化st7789屏幕
     if (ESP_OK != init_lcd()) {
         return;
@@ -75,7 +49,7 @@ void app_main() {
     // 降低分辨率，会提高速度，降低精度 eg. 2 减小两倍
     td->quad_decimate = 2;
     //高斯模糊 eg 0.8
-    td->quad_sigma = 0.8;
+    td->quad_sigma = 0.8f;
     // 线程数
     td->nthreads = 1;
     //
@@ -126,8 +100,8 @@ void app_main() {
                      i, det->family->nbits, det->family->h, det->id, det->hamming, det->decision_margin);
             ESP_LOGE("apriltag", "x %8.3lf   y %8.3lf\n",
                      det->c[0], det->c[1]);
-            x = det->c[0];
-            y = det->c[1];
+            x = (int)det->c[0];
+            y = (int)det->c[1];
             if (x + y != 0) {
                 draw_rect_rgb565(frameBuffer, 240, 240, x, y, x + 10, y + 10, swap_uint16(0b1111100000000000));
             }
