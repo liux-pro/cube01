@@ -7,6 +7,7 @@
 #include "esp_camera.h"
 #include "esp_heap_caps.h"
 #include "apriltag.h"
+#include "tag16h5.h"
 #include <stdio.h>
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
@@ -19,6 +20,8 @@
 #include "lcd.h"
 #include "camera.h"
 #include "utils.h"
+#include "taskMonitor.h"
+
 
 #define MAIN_LOG_TAG "${PROJECT_NAME}:main"
 
@@ -28,6 +31,7 @@ EXT_RAM_BSS_ATTR uint8_t gray[240 * 240];
 
 
 _Noreturn void app_main() {
+    startTaskMonitor(10000);
     //初始化st7789屏幕
     if (ESP_OK != init_lcd()) {
         return;

@@ -21,7 +21,7 @@ static camera_config_t camera_config = {
         .pin_pclk = 11,
 
         //XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
-        .xclk_freq_hz = 30000000,
+        .xclk_freq_hz = 25000000,
         .ledc_timer = LEDC_TIMER_0,
         .ledc_channel = LEDC_CHANNEL_0,
 

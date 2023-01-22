@@ -1,3 +1,4 @@
+#pragma once
 #include "esp_timer.h"
 
 typedef struct {
