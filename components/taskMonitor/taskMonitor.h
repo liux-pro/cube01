@@ -19,6 +19,7 @@ static esp_err_t print_real_time_stats(TickType_t xTicksToWait) {
             "Stack", "%lu",
             "Running Time", "%lu",
             "Percentage", "%lu%%",
+            "CPU ID", "%d",
             NULL
     );
 
@@ -82,7 +83,7 @@ static esp_err_t print_real_time_stats(TickType_t xTicksToWait) {
             uint32_t task_elapsed_time = end_array[k].ulRunTimeCounter - start_array[i].ulRunTimeCounter;
             uint32_t percentage_time = (task_elapsed_time * 100UL) / (total_elapsed_time * portNUM_PROCESSORS);
             table_add(&t, start_array[i].pcTaskName, end_array[i].usStackHighWaterMark, task_elapsed_time,
-                      percentage_time);
+                      percentage_time,(start_array[i].xCoreID >=0 && start_array[i].xCoreID <100)?start_array[i].xCoreID:-1);
         }
     }
     table_print(&t, 100, stdout);
