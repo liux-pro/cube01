@@ -344,6 +344,9 @@ bool table_print(struct table const *t, size_t n, FILE *f)
         fputc(CORNER, f);
         fputc('\n', f);
 
+        free(max);
+        free(remaining);
+
         return true;
 }
 
@@ -357,7 +360,7 @@ void table_free(struct table *t)
                 }
         }
 
-        for (i = 0; i < t->cols; ++i) {
+        for (i = 0; i < t->rows; ++i) {
                 free(t->data[i]);
         }
 

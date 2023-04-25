@@ -45,5 +45,7 @@ It will print task status like this every 10s.
 ```
 
 ## Libtable
-data formated by libtable.  
+Data is formatted as a table by libtable.  
 https://github.com/marchelzo/libtable
+There is memory leak issues on origin code,I fixed it in this fork.
+https://github.com/liux-pro/libtable
