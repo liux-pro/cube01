@@ -20,7 +20,7 @@
 #define ST7789_PIN_NUM_LCD_DC         15
 #define ST7789_PIN_NUM_LCD_RST        16
 #define ST7789_PIN_NUM_LCD_CS         (-1)
-#define ST7789_PIN_NUM_BK_LIGHT       12
+#define ST7789_PIN_NUM_BK_LIGHT       14
 
 #define LCD_WIDTH       240
 #define LCD_HEIGHT      240
